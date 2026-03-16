@@ -15,7 +15,7 @@ class Status(models.TextChoices):
 
 class DeliveryMethod(models.TextChoices):
     PICKUP = "pickup", "Pickup"
-    DELIVERY = "delivery", "Delivery"
+    COURIER = "courier", "Courier"
 
 
 class OrderStatus(models.TextChoices):

@@ -1,7 +1,9 @@
+import uuid
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
 
+from common.enums.code_generators.order_code import generate_order_code
 from common.enums.enums import OrderStatus, DeliveryMethod
 from common.models.base_model import BaseModel
 from apps.catalog.models.product import Product
@@ -12,6 +14,13 @@ class Order(BaseModel):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="orders"
+    )
+    order_code = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        db_index=True,
+        default=generate_order_code(),
     )
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
 

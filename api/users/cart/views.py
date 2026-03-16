@@ -1,19 +1,22 @@
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from apps.cart.models import Cart, CartItem
 from .serializers import (
     CartReadSerializer,
-    AddProductToCartSerializer, CartItemUpdateSerializer,
+    AddProductToCartSerializer,
+    CartItemUpdateSerializer,
 )
 
 
 def get_or_restore_cart(user):
-    cart = Cart.all_objects.filter(user=user).first()
+    if not getattr(user, "is_authenticated", False):
+        raise NotAuthenticated("Authentication credentials were not provided.")
+
+    cart = Cart.all_objects.filter(user_id=user.id).first()
 
     if cart:
         if cart.is_deleted:
@@ -23,32 +26,32 @@ def get_or_restore_cart(user):
     return Cart.objects.create(user=user)
 
 
-class CartCreateAPIView(APIView):
+class BaseCartAPIView(GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = CartReadSerializer  # ENG MUHIM JOY
 
-    def post(self, request):
-        cart = get_or_restore_cart(request.user)
+    def get_cart(self):
+        return get_or_restore_cart(self.request.user)
 
-        cart = Cart.objects.prefetch_related(
+    def get_prefetched_cart(self, cart_id):
+        return Cart.objects.prefetch_related(
             "items__product__detail",
             "items__product__images",
-        ).get(id=cart.id)
+        ).get(id=cart_id)
 
+    def get_cart_response(self, cart, request, status_code=status.HTTP_200_OK):
         serializer = CartReadSerializer(cart, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status_code)
 
 
-def get_or_restore_cart(user):
-    cart = Cart.all_objects.filter(user=user).first()
-    if cart:
-        if cart.is_deleted:
-            cart.restore()
-        return cart
-    return Cart.objects.create(user=user)
+class CartCreateAPIView(BaseCartAPIView):
+    def post(self, request, *args, **kwargs):
+        cart = self.get_cart()
+        cart = self.get_prefetched_cart(cart.id)
+        return self.get_cart_response(cart, request, status.HTTP_201_CREATED)
 
 
-class AddProductToCartAPIView(GenericAPIView):
-    permission_classes = [IsAuthenticated]
+class AddProductToCartAPIView(BaseCartAPIView):
     serializer_class = AddProductToCartSerializer
 
     def post(self, request, *args, **kwargs):
@@ -58,17 +61,15 @@ class AddProductToCartAPIView(GenericAPIView):
         product = serializer.validated_data["product_obj"]
         quantity = serializer.validated_data["quantity"]
 
-        cart = get_or_restore_cart(request.user)
+        cart = self.get_cart()
 
-        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+        cart_item = CartItem.objects.filter(
+            cart_id=cart.id,
+            product_id=product.id,
+        ).first()
 
         if cart_item:
-            if cart_item.is_deleted:
-                cart_item.restore()
-                cart_item.quantity = 0
-
             new_quantity = cart_item.quantity + quantity
-
             if new_quantity > product.detail.stock:
                 return Response(
                     {"quantity": "Requested quantity exceeds available stock."},
@@ -76,7 +77,7 @@ class AddProductToCartAPIView(GenericAPIView):
                 )
 
             cart_item.quantity = new_quantity
-            cart_item.save(update_fields=["quantity", "updated_at"])
+            cart_item.save(update_fields=["quantity"])
         else:
             CartItem.objects.create(
                 cart=cart,
@@ -84,68 +85,48 @@ class AddProductToCartAPIView(GenericAPIView):
                 quantity=quantity,
             )
 
-        cart = Cart.objects.prefetch_related(
-            "items__product__detail",
-            "items__product__images",
-        ).get(id=cart.id)
-
-        response_serializer = CartReadSerializer(cart, context={"request": request})
-        return Response(response_serializer.data, status=status.HTTP_200_OK)
+        cart = self.get_prefetched_cart(cart.id)
+        return self.get_cart_response(cart, request)
 
 
-class CartItemUpdateDeleteAPIView(GenericAPIView):
-    permission_classes = [IsAuthenticated]
+class CartItemUpdateDeleteAPIView(BaseCartAPIView):
     serializer_class = CartItemUpdateSerializer
+    queryset = CartItem.objects.select_related("cart", "product__detail")
 
-    def get_object(self, pk, user):
-        return get_object_or_404(
-            CartItem.objects.select_related("cart", "product__detail"),
-            id=pk,
-            cart__user=user,
-        )
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return CartItem.objects.none()
 
-    def patch(self, request, pk):
-        cart_item = self.get_object(pk, request.user)
+        user = self.request.user
+        if not getattr(user, "is_authenticated", False):
+            return CartItem.objects.none()
+
+        return self.queryset.filter(cart__user_id=user.id)
+
+    def get_object(self, pk):
+        return get_object_or_404(self.get_queryset(), id=pk)
+
+    def patch(self, request, pk, *args, **kwargs):
+        cart_item = self.get_object(pk)
 
         serializer = self.get_serializer(cart_item, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        cart = Cart.objects.prefetch_related(
-            "items__product__detail",
-            "items__product__images",
-        ).get(id=cart_item.cart_id)
+        cart = self.get_prefetched_cart(cart_item.cart_id)
+        return self.get_cart_response(cart, request)
 
-        return Response(
-            CartReadSerializer(cart, context={"request": request}).data,
-            status=status.HTTP_200_OK,
-        )
-
-    def delete(self, request, pk):
-        cart_item = self.get_object(pk, request.user)
+    def delete(self, request, pk, *args, **kwargs):
+        cart_item = self.get_object(pk)
         cart_id = cart_item.cart_id
         cart_item.delete()
 
-        cart = Cart.objects.prefetch_related(
-            "items__product__detail",
-            "items__product__images",
-        ).get(id=cart_id)
+        cart = self.get_prefetched_cart(cart_id)
+        return self.get_cart_response(cart, request)
 
-        return Response(
-            CartReadSerializer(cart, context={"request": request}).data,
-            status=status.HTTP_200_OK,
-        )
 
-class CartDetailAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        cart = get_or_restore_cart(request.user)
-
-        cart = Cart.objects.prefetch_related(
-            "items__product__detail",
-            "items__product__images",
-        ).get(id=cart.id)
-
-        serializer = CartReadSerializer(cart, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class CartDetailAPIView(BaseCartAPIView):
+    def get(self, request, *args, **kwargs):
+        cart = self.get_cart()
+        cart = self.get_prefetched_cart(cart.id)
+        return self.get_cart_response(cart, request)
