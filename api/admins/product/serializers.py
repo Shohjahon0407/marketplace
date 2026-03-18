@@ -12,7 +12,6 @@ class ProductImageReadSerializer(serializers.ModelSerializer):
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField(write_only=True, min_value=0)
-    images = serializers.ImageField(write_only=True, required=False)
 
     class Meta:
         model = Product
@@ -24,7 +23,6 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "price",
             "discount_price",
             "quantity",
-            "images",
             "sku",
             "status",
         ]
@@ -38,7 +36,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         request = self.context.get("request")
-        images = request.FILES.getlist("images") if request else []
+        uploaded_images = request.FILES.getlist("images") if request else []
 
         category = attrs.get("category")
         name = attrs.get("name")
@@ -66,7 +64,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                 "quantity": "Quantity must be 0 or greater."
             })
 
-        if len(images) > 10:
+        if len(uploaded_images) > 10:
             raise serializers.ValidationError({
                 "images": "You can upload at most 10 images."
             })
@@ -84,8 +82,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context["request"]
-        images = request.FILES.getlist("images")
-        validated_data.pop("images", None)
+        uploaded_images = request.FILES.getlist("images")
 
         quantity = validated_data.pop("quantity")
         validated_data["status"] = (
@@ -100,10 +97,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                 stock=quantity
             )
 
-            if images:
+            if uploaded_images:
                 ProductImage.objects.bulk_create([
                     ProductImage(product=product, image=image)
-                    for image in images
+                    for image in uploaded_images
                 ])
 
         return product

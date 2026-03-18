@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from api.admins.product.serializers import ProductCreateSerializer, ProductReadSerializer, ProductUpdateSerializer
@@ -14,6 +15,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_serializer_class(self):
         if self.action == "create":

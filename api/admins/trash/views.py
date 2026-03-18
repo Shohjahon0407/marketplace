@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -10,6 +11,8 @@ from apps.catalog.models.product import Product
 class DeletedProducts(ModelViewSet):
     queryset = Product.all_objects.filter(is_deleted=True)
     http_method_names = ["get", "patch", "delete"]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
 
     def get_serializer_class(self):
         if self.action == ['patch']:

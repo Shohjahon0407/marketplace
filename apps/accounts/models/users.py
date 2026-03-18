@@ -31,6 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     # Django admin
     is_staff = models.BooleanField(default=False)
+    is_worker = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

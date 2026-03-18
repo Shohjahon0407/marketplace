@@ -1,7 +1,6 @@
-import uuid
 from decimal import Decimal
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction, IntegrityError
 
 from common.enums.code_generators.order_code import generate_order_code
 from common.enums.enums import OrderStatus, DeliveryMethod
@@ -20,9 +19,13 @@ class Order(BaseModel):
         unique=True,
         editable=False,
         db_index=True,
-        default=generate_order_code(),
+        blank=True,
     )
-    status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
+    status = models.CharField(
+        max_length=20,
+        choices=OrderStatus.choices,
+        default=OrderStatus.PENDING
+    )
 
     delivery_method = models.CharField(
         max_length=20,
@@ -38,8 +41,22 @@ class Order(BaseModel):
 
     comment = models.CharField(max_length=255, blank=True)
 
+    def save(self, *args, **kwargs):
+        if self.order_code:
+            return super().save(*args, **kwargs)
+
+        for _ in range(10):
+            self.order_code = generate_order_code()
+            try:
+                with transaction.atomic():
+                    return super().save(*args, **kwargs)
+            except IntegrityError:
+                self.order_code = ""
+
+        raise IntegrityError("Unique order_code yaratib bo'lmadi.")
+
     def __str__(self):
-        return f"Order {self.id} - {self.user}"
+        return f"{self.order_code} - {self.user}"
 
 
 class OrderItem(BaseModel):
