@@ -1,7 +1,7 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 
 from apps.accounts.models import User
@@ -9,9 +9,11 @@ from apps.orders.models import Order
 from apps.catalog.models.product import Product
 from django.db.models import Sum
 
+from common.permissions.worker_permission import IsWorker
+
 
 class AdminDashboardOverviewAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsWorker or IsAdminUser ]
 
     def get(self, request):
         # Buyurtmalar soni

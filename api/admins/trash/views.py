@@ -6,12 +6,13 @@ from rest_framework.viewsets import ModelViewSet
 from api.admins.product.serializers import ProductReadSerializer
 from api.admins.trash.serialziers import RestoreSerializer
 from apps.catalog.models.product import Product
+from common.permissions.worker_permission import IsWorker
 
 
 class DeletedProducts(ModelViewSet):
     queryset = Product.all_objects.filter(is_deleted=True)
     http_method_names = ["get", "patch", "delete"]
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsWorker or IsAdminUser ]
 
 
     def get_serializer_class(self):

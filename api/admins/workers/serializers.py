@@ -11,7 +11,6 @@ class WorkerCreateSerializer(serializers.ModelSerializer):
         fields = [
             'name',
             'phone',
-            'email',
             'password',
             'confirm_password',
         ]
@@ -50,7 +49,7 @@ class WorkerListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id',
                   'name',
-                  'phone',]
+                  'phone', ]
 
 
 class WorkerUpdateSerializer(serializers.ModelSerializer):

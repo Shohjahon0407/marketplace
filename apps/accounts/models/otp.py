@@ -1,81 +1,44 @@
-from __future__ import annotations
+import random
+import string
 
-from datetime import timedelta
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password, check_password
+from datetime import timedelta
 
 from common.models.base_model import BaseModel
-from common.models.user_mananger import email_validator, phone_validator
+from common.validators.phone_validator import phone_validator
 
 
-class OTPCode(BaseModel):
+class PhoneOTP(BaseModel):
     """
-    Universal OTP:
-    - channel=email bo‘lsa target=email
-    - channel=phone bo‘lsa target=phone
-    OTP ni plaintext saqlama. Hash saqla.
+    Har bir OTP so'rov uchun alohida yozuv.
+    5 daqiqadan keyin expire bo'ladi, 3 ta noto'g'ri urinishdan keyin block.
     """
-
-    class Channel(models.TextChoices):
-        EMAIL = "email", "Email"
-        PHONE = "phone", "Phone"
-
-    channel = models.CharField(max_length=10, choices=Channel.choices, db_index=True)
-    target = models.CharField(max_length=128, db_index=True)  # email yoki phone string
-
-    code_hash = models.CharField(max_length=128)  # make_password natijasi
-    expires_at = models.DateTimeField(db_index=True)
-
-    # Anti-bruteforce:
+    phone = models.CharField(max_length=13, db_index=True, validators=[phone_validator])
+    code = models.CharField(max_length=5)
+    is_verified = models.BooleanField(default=False)
     attempts = models.PositiveSmallIntegerField(default=0)
-    max_attempts = models.PositiveSmallIntegerField(default=5)
-
-    # Anti-spam:
-    sent_count_day = models.PositiveSmallIntegerField(default=0)
-    last_sent_at = models.DateTimeField(null=True, blank=True)
-
-    is_used = models.BooleanField(default=False, db_index=True)
+    expires_at = models.DateTimeField()
 
     class Meta:
-        indexes = [
-            models.Index(fields=["channel", "target", "-created_at"]),
-            models.Index(fields=["channel", "target", "is_used", "-created_at"]),
-        ]
+        ordering = ["-created_at"]
 
-    def clean(self):
-        # Model-level validation (serializerda ham tekshir, lekin bu ham foydali)
-        if self.channel == self.Channel.EMAIL:
-            email_validator(self.target)
-            self.target = self.target.strip().lower()
-        elif self.channel == self.Channel.PHONE:
-            phone_validator(self.target)
-        else:
-            raise ValidationError({"channel": "Noto‘g‘ri channel"})
+    def __str__(self):
+        return f"OTP({self.phone}) — {'✓' if self.is_verified else '✗'}"
 
-    @classmethod
-    def make(cls, channel: str, target: str, code: str, ttl_seconds: int = 120) -> "OTPCode":
-        obj = cls(
-            channel=channel,
-            target=target,
-            code_hash=make_password(code),
-            expires_at=timezone.now() + timedelta(seconds=ttl_seconds),
-        )
-        obj.full_clean()
-        return obj
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=5)
+        super().save(*args, **kwargs)
 
-    def verify(self, code: str) -> bool:
-        if self.is_used:
-            return False
-        if timezone.now() > self.expires_at:
-            return False
-        if self.attempts >= self.max_attempts:
-            return False
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() > self.expires_at
 
-        ok = check_password(code, self.code_hash)
-        self.attempts += 1
-        if ok:
-            self.is_used = True
-        self.save(update_fields=["attempts", "is_used", "updated_at"])
-        return ok
+    @property
+    def is_blocked(self) -> bool:
+        return self.attempts >= 3
+
+    @staticmethod
+    def generate_code() -> str:
+        return "".join(random.choices(string.digits, k=5))

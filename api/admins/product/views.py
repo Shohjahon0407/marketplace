@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 from api.admins.product.serializers import ProductCreateSerializer, ProductReadSerializer, ProductUpdateSerializer
 from apps.catalog.models.product import Product
+from common.permissions.worker_permission import IsWorker
 from utils.filters.category_filter import ProductFilter
 
 
@@ -15,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsWorker or IsAdminUser ]
 
     def get_serializer_class(self):
         if self.action == "create":

@@ -11,6 +11,7 @@ from api.admins.orders.serializers import (
     AdminOrderStatusUpdateSerializer,
     AdminPickupByCodeSerializer,
 )
+from common.permissions.worker_permission import IsWorker
 
 
 class AdminOrderViewSet(
@@ -19,18 +20,19 @@ class AdminOrderViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsWorker or IsAdminUser ]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = [
         "order_code",
         "delivery_address",
         "comment",
-        "user__email",
+        "user__phone",
         # "user__phone_number",
         "items__product_name",
     ]
     ordering_fields = ["created_at", "total_price", "subtotal"]
     ordering = ["-created_at"]
+    http_method_names = ["get", "post", "patch", "delete"]
 
     queryset = (
         Order.objects

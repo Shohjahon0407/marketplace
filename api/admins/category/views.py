@@ -5,12 +5,13 @@ from rest_framework.viewsets import ModelViewSet
 from api.admins.category.serializers import AdminCategoryListSerializer, CategoryCreateSerializer, \
     CategoryUpdateSerializer
 from apps.catalog.models.category import Category
+from common.permissions.worker_permission import IsWorker
 
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     http_method_names = ["get", "post", "patch", "delete"]
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsWorker or IsAdminUser ]
 
     def get_serializer_class(self):
         if self.action == "create":

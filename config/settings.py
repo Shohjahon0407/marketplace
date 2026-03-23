@@ -78,8 +78,22 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    # Bruteforce’ni odamlar “o‘yin” deb o‘ylamasin:
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/min",
+        "user": "120/min",
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
 }
-    
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -212,21 +226,6 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    # Bruteforce’ni odamlar “o‘yin” deb o‘ylamasin:
-    "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
-    ],
-    "DEFAULT_THROTTLE_RATES": {
-        "anon": "30/min",
-        "user": "120/min",
-    },
-}
-
 
 # email
 
@@ -273,3 +272,8 @@ LOGGING = {
         },
     },
 }
+
+# ESKIZ_EMAIL = env('ESKIZ_EMAIL')  # Eskiz kabinetdagi email
+# ESKIZ_PASSWORD = env('ESKIZ_PASSWORD')  # Eskiz kabinetdagi parol
+# ESKIZ_BASE_URL = env('ESKIZ_BASE_URL')
+# ESKIZ_SENDER = env('ESKIZ_SENDER')
