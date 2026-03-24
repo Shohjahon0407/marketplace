@@ -13,9 +13,8 @@ class Profile(BaseModel):
     )
     gender = models.CharField(
         max_length=10,
-        choices=
-        Gender.choices,
+        choices=Gender.choices,
         blank=True,
         null=True,
     )
-    birth_date = models.DateTimeField()
+    birth_date = models.DateField()
