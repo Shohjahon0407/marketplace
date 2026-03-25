@@ -77,6 +77,6 @@ class AllOrdersListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        queryset = Order.objects.filter(user=request.user).order_by("-created_at")
+        queryset = Order.objects.filter(user=request.user).exclude(status=OrderStatus.PENDING).order_by("-created_at")
         serializer = OrderListSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
