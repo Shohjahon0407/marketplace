@@ -8,6 +8,7 @@ from apps.orders.models.address import Address
 from apps.orders.models.order import Order, OrderItem
 
 from common.enums.enums import OrderStatus, DeliveryMethod
+from common.services.telegram import send_new_order_notification
 from common.status_update.cancel import restore_order_items_to_stock
 
 
@@ -198,6 +199,7 @@ class OrderCreateSerializer(serializers.Serializer):
             ProductCount.objects.bulk_update(stock_objects_to_update, ["stock"])
 
             cart.items.all().delete()
+            transaction.on_commit(lambda: send_new_order_notification(order))
 
         return order
 

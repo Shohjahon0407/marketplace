@@ -273,6 +273,9 @@ LOGGING = {
     },
 }
 
+TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_ADMIN_CHAT_ID = env("TELEGRAM_ADMIN_CHAT_ID", default="")
+
 # ESKIZ_EMAIL = env('ESKIZ_EMAIL')  # Eskiz kabinetdagi email
 # ESKIZ_PASSWORD = env('ESKIZ_PASSWORD')  # Eskiz kabinetdagi parol
 # ESKIZ_BASE_URL = env('ESKIZ_BASE_URL')
