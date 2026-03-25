@@ -47,6 +47,7 @@ class SendOTPView(APIView):
         tags=["Auth"],
     )
     def post(self, request):
+        authenticated = False
         serializer = SendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data["phone"]
@@ -54,6 +55,8 @@ class SendOTPView(APIView):
         # ── Admin/Worker tekshiruvi ──
         try:
             user = User.objects.get(phone=phone)
+            if user:
+                authenticated = True
             if user.is_password_auth:
                 return Response(
                     {
@@ -97,6 +100,7 @@ class SendOTPView(APIView):
                 "auth_method": "otp",
                 "detail": "Tasdiqlash kodi yuborildi.",
                 "code": code,  # TODO: Productionda olib tashlash!
+                "authenticated": authenticated
             },
             status=status.HTTP_200_OK,
         )
