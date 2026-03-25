@@ -17,7 +17,10 @@ class ProfileViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        user = self.request.user
+        if not user.is_authenticated:
+            return self.queryset.none()
+        return self.queryset.filter(user=user)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -64,7 +67,7 @@ class ProfileViewSet(ModelViewSet):
 class NewOrderListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self):
+    def get(self, request, *args, **kwargs):
         queryset = Order.objects.filter(user=request.user, status=OrderStatus.PENDING).order_by("-created_at")
         serializer = OrderListSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -73,7 +76,7 @@ class NewOrderListAPIView(APIView):
 class AllOrdersListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self):
+    def get(self, request, *args, **kwargs):
         queryset = Order.objects.filter(user=request.user).order_by("-created_at")
         serializer = OrderListSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
