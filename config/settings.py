@@ -164,8 +164,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/startup_apps/kettumi/static/'
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -251,7 +250,6 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if DEBUG:
     LOGGING = {
         "version": 1,
@@ -268,7 +266,7 @@ if DEBUG:
             },
             "file": {
                 "class": "logging.FileHandler",
-                "filename": BASE_DIR / "logs" / "debug.log",
+                "filename": LOG_DIR / "debug.log",
                 "formatter": "standard",
             },
         },
@@ -297,6 +295,7 @@ else:
             "level": "INFO",
         },
     }
+
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_ADMIN_CHAT_ID = env("TELEGRAM_ADMIN_CHAT_ID", default="")
 TELEGRAM_WEBHOOK_SECRET = env("TELEGRAM_WEBHOOK_SECRET", default="telegram-secret")
