@@ -39,7 +39,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include([
         path('user/', include('api.users.urls')),
-        path('admin/', include('api.admins.urls'))
+        path('admin/', include('api.admins.urls')),
+        path('order_bot/', include('api.order_bot.urls')),
+
+        path('bot/', include('api.bot.urls'))
     ])),
     path('swagger/', user_schema_view.with_ui('swagger', cache_timeout=0), name="swagger-ui"),
     path('swagger/admin/', admin_schema_view.with_ui('swagger', cache_timeout=0), name="swagger-ui"),

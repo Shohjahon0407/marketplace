@@ -19,20 +19,19 @@ SECRET_KEY = env.str("DJANGO_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    ".ngrok-free.dev",
-]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".onrender.com"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.ngrok-free.dev",
+    "https://*.onrender.com",
 ]
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
+CORS_ALLOWED_ORIGINS = [
+    "https://market-place1.vercel.app",
+]
 
 CORS_ALLOW_CREDENTIALS = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 # Application definition
 
@@ -50,6 +49,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     'django_filters',
+    "corsheaders",
 
     # local apps
     'apps.accounts',
@@ -58,9 +58,14 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.wishlist',
     'apps.workers',
+    'apps.telegram_bot',
 ]
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -275,6 +280,7 @@ LOGGING = {
 
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_ADMIN_CHAT_ID = env("TELEGRAM_ADMIN_CHAT_ID", default="")
+TELEGRAM_WEBHOOK_SECRET = env("TELEGRAM_WEBHOOK_SECRET", default="telegram-secret")
 
 # ESKIZ_EMAIL = env('ESKIZ_EMAIL')  # Eskiz kabinetdagi email
 # ESKIZ_PASSWORD = env('ESKIZ_PASSWORD')  # Eskiz kabinetdagi parol

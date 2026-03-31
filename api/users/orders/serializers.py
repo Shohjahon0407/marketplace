@@ -31,8 +31,38 @@ class OrderItemReadSerializer(serializers.ModelSerializer):
         ]
 
 
+class OrderListItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.UUIDField(source="product.id", read_only=True)
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            "id",
+            "product_id",
+            "product_name",
+            "image",
+            "quantity",
+            "unit_price",
+            "total_price",
+        ]
+
+    def get_image(self, obj):
+        first_image = obj.product.images.first()
+        if not first_image or not first_image.image:
+            return None
+
+        request = self.context.get("request")
+        image_url = first_image.image.url
+
+        if request:
+            return request.build_absolute_uri(image_url)
+        return image_url
+
+
 class OrderListSerializer(serializers.ModelSerializer):
     items_count = serializers.SerializerMethodField()
+    items = OrderListItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
@@ -45,6 +75,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             "total_price",
             "comment",
             "items_count",
+            "items",
             "created_at",
             "order_code",
         ]

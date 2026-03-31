@@ -31,7 +31,11 @@ class OrderViewSet(
         return (
             Order.objects
             .filter(user_id=user.id, is_deleted=False)
-            .prefetch_related("items", "items__product")
+            .prefetch_related(
+                "items",
+                "items__product",
+                "items__product__images",
+            )
             .order_by("-created_at")
         )
 
