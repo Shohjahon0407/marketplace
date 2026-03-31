@@ -249,28 +249,51 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-
-    "formatters": {
-        "json": {
-            "format": '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s"}'
+if DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": "%(levelname)s %(asctime)s %(name)s %(message)s"
+            },
         },
-    },
-
-    "handlers": {
-        "file": {
-            "level": "ERROR",
-            "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "logs/unhandled_errors.json"),
-            "formatter": "json",
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "standard",
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": BASE_DIR / "logs" / "debug.log",
+                "formatter": "standard",
+            },
         },
-    },
-
-}
-
+        "root": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+        },
+    }
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": "%(levelname)s %(asctime)s %(name)s %(message)s"
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "standard",
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    }
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_ADMIN_CHAT_ID = env("TELEGRAM_ADMIN_CHAT_ID", default="")
 TELEGRAM_WEBHOOK_SECRET = env("TELEGRAM_WEBHOOK_SECRET", default="telegram-secret")
