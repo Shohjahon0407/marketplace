@@ -269,13 +269,6 @@ LOGGING = {
         },
     },
 
-    "loggers": {
-        "django.request": {
-            "handlers": ["file"],
-            "level": "ERROR",
-            "propagate": True,
-        },
-    },
 }
 
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
