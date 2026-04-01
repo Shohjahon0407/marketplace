@@ -19,6 +19,7 @@ class OrderViewSet(
     viewsets.GenericViewSet,
 ):
     permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):

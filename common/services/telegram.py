@@ -124,9 +124,23 @@ def build_orders_filter_keyboard() -> dict:
 
 
 def format_order_notification(order) -> str:
-    user_name = getattr(order.user, "name", "") or getattr(order.user, "phone", "Unknown user")
-    items_count = order.items.count()
-    product = getattr(order.product, "name", "")
+    user_name = (
+        getattr(order.user, "name", "")
+        or getattr(order.user, "phone", "")
+        or "Unknown user"
+    )
+
+    items = order.items.all()
+    items_count = items.count()
+
+    product_lines = []
+    for item in items[:5]:
+        product_lines.append(f"• {item.product_name} x {item.quantity}")
+
+    products_text = "\n".join(product_lines) if product_lines else "Mahsulot yo'q"
+
+    if items_count > 5:
+        products_text += f"\n... va yana {items_count - 5} ta"
 
     order_taking = "Do'konga kelib olib ketadi"
     if getattr(order, "delivery_method", "") == "courier":
@@ -136,14 +150,13 @@ def format_order_notification(order) -> str:
     return (
         f"🛒 <b>Yangi order yaratildi</b>\n\n"
         f"<b>Order code:</b> {order.order_code}\n"
-        f"<b>Order code:</b> {product}\n"
         f"<b>Mijoz:</b> {user_name}\n"
         f"<b>Mahsulotni topshirish:</b> {order_taking}\n"
         f"<b>Status:</b> {order.status}\n"
         f"<b>Mahsulotlar soni:</b> {items_count}\n"
         f"<b>Jami summa:</b> {order.total_price}\n"
+        f"<b>Mahsulotlar:</b>\n{products_text}\n"
     )
-
 
 def send_new_order_notification(order) -> bool:
     return send_telegram_message(
