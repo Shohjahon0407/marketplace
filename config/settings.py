@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "apps.wishlist",
     "apps.workers",
     "apps.telegram_bot",
+    "apps.shop",
 ]
 
 MIDDLEWARE = [
