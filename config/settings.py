@@ -14,10 +14,33 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env.str("DJANGO_SECRET")
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".onrender.com"]
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".onrender.com"]
+#
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://*.onrender.com",
+# ]
+#
+# CORS_ALLOWED_ORIGINS = [
+#     "https://market-place1.vercel.app",
+# ]
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".onrender.com",
+    ".ngrok-free.app",
+    ".ngrok-free.dev",
+    ".ngrok.app",
+    ".ngrok.dev",
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
+    "https://market-place1.vercel.app",
+    "https://*.ngrok-free.app",
+    "https://*.ngrok-free.dev",
+    "https://*.ngrok.app",
+    "https://*.ngrok.dev",
 ]
 
 CORS_ALLOWED_ORIGINS = [
