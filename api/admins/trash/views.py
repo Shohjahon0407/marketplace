@@ -37,7 +37,7 @@ class DeletedProducts(ModelViewSet):
         product = self.get_object()
 
         try:
-            product.hard_delete()
+            product.delete()
         except ProtectedError:
             return Response(
                 {
