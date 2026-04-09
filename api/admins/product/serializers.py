@@ -22,6 +22,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "discount_price",
+            "bulk_price",
             "quantity",
             "sku",
             "status",
@@ -43,11 +44,15 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         price = attrs.get("price")
         discount_price = attrs.get("discount_price")
         quantity = attrs.get("quantity")
+        bulk_price = attrs.get("bulk_price")
 
         if price is None or price <= 0:
             raise serializers.ValidationError({
                 "price": "Price must be greater than 0."
             })
+        if bulk_price is not None:
+            if bulk_price < 0:
+                raise serializers.ValidationError({"Optom narx manfiy son bo'la lymaydi"})
 
         if discount_price is not None:
             if discount_price < 0:
@@ -126,6 +131,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "discount_price",
+            "bulk_price",
             "discount_percent",
             "status",
             "sku",
@@ -159,6 +165,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "discount_price",
+            "bulk_price",
             "quantity",
             "images",
             "delete_image_ids",

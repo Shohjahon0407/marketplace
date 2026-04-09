@@ -27,6 +27,7 @@ class Product(BaseModel):
         blank=True,
         validators=[MinValueValidator(Decimal("0"))]
     )
+    bulk_price = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=12)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_STOCK, db_index=True)
     sku = models.CharField(max_length=64, unique=True, default=generate_sku, editable=False)
 

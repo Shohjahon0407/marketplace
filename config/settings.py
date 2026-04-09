@@ -27,6 +27,9 @@ DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+
+    "192.168.1.27",
+    
     ".onrender.com",
     ".ngrok-free.app",
     ".ngrok-free.dev",
@@ -45,6 +48,9 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "https://market-place1.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.1.27:5173",   # agar frontend ham shu IP bilan ochilsa    ""
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -272,3 +278,5 @@ TELEGRAM_ADMIN_CHAT_ID = env("TELEGRAM_ADMIN_CHAT_ID", default="")
 TELEGRAM_WEBHOOK_SECRET = env("TELEGRAM_WEBHOOK_SECRET", default="telegram-secret")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
