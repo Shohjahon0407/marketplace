@@ -20,6 +20,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "price",
             "discount_price",
             "discount_percent",
+            "bulk_price",
             "status",
             "detail",
             "images",
